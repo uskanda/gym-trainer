@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "start": "node ."
+  },
   "dependencies": {
     "@line/bot-sdk": "^6.6.0",
     "express": "^4.16.4"
