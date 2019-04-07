@@ -29,7 +29,6 @@ app.post('/callback', line.middleware(config), (req, res) => {
 
         let events_processed = [];
         req.body.events.forEach(async (event) => {
-            console.log("receive " + event.type);
             if (event.type == "message" && event.message.type == "text"){
                 if (event.message.text == "こんにちは"){
                     const profile = await client.getProfile(event.source.userId);
@@ -39,7 +38,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                     }));
                 }
             }
-            if (event.type == "image"){
+            if (event.type == "message" && event.message.type == "image"){
                 const profile = await client.getProfile(event.source.userId);
                 const name = profile.displayName;
                 const Counter = mongoose.model("Counter");
