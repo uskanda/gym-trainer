@@ -17,7 +17,10 @@ const client = new line.Client(config);
 // about Express itself: https://expressjs.com/
 const app = express();
 
-const mongo_url = "mongodb://heroku_nsrr99d4:6ef3isk494afbp9ec1mj6u18ki@ds133556.mlab.com:33556/heroku_nsrr99d4"
+let Schema = mongoose.Schema;
+const CounterSchema = new Schema({name: String, count: Number, month: String});
+mongoose.model("Counter", CounterSchema);
+mongoose.connect(process.env.MONGODB_URI);
 
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
@@ -29,20 +32,40 @@ app.post('/callback', line.middleware(config), (req, res) => {
             if (event.type == "message" && event.message.type == "text"){
                 if (event.message.text == "こんにちは"){
                     const profile = await client.getProfile(event.source.userId);
-                    console.log(profile);
                     events_processed.push(client.replyMessage(event.replyToken, {
                         type: "text",
-                        text: "こんにちは"
+                        text: profile.displayName + "さん、こんにちは"
                     }));
                 }
             }
             if (event.type == "image"){
-                if (event.message.text == "こんにちは"){
-                    events_processed.push(client.replyMessage(event.replyToken, {
-                        type: "text",
-                        text: "こんにちは"
-                    }));
+                const profile = await client.getProfile(event.source.userId);
+                const name = profile.displayName;
+                const Counter = mongoose.model("Counter");
+                const date = new Date();
+                const month = ""+date.getFullYear()+date.getMonth();
+                let c = await Counter.findOne({name: name, month: month});
+                if(c){
+                    console.log("counter found");
+                    console.log(doc);
+                } else {
+                    console.log("counter not found");
+                    c = new Counter();
+                    c.name = name;
+                    c.month = month;
+                    c.count = 0;
                 }
+                c.count++;
+                await c.save();
+                const counts = await Counter.find({month: month});
+                let text = counts.reduce((co,current)=>{
+                    return current + "¥n" + co.name + "¥t" + co.count + "回"
+                },name + "君、ご苦労だった。今月の皆の状況は以下の通りだ。");
+
+                events_processed.push(client.replyMessage(event.replyToken, {
+                    type: "text",
+                    text: text
+                }));
             }
         });
         Promise.all(events_processed).then(
