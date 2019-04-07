@@ -18,62 +18,113 @@ const client = new line.Client(config);
 const app = express();
 
 let Schema = mongoose.Schema;
-const CounterSchema = new Schema({name: String, count: Number, month: String, last: Date});
+const CounterSchema = new Schema({name: String, month: String, day: Number, last: Date});
 mongoose.model("Counter", CounterSchema);
 mongoose.connect(process.env.MONGODB_URI);
+
+async function manageCount(event,force=false){
+    const profile = await client.getProfile(event.source.userId);
+    const name = profile.displayName;
+    const Counter = mongoose.model("Counter");
+    const date = new Date();
+    const month = "" + date.getFullYear() + date.getMonth();
+    if(!force){
+        let c = await Counter.findOne({ name: name, month: month, day: date.getDate() });
+        if (c) {
+            console.log("counter found");
+            console.log(c);
+            events_processed.push(client.replyMessage(event.replyToken, {
+                type: "text",
+                text: name + "君、今日は既にジムに行ったはずだが？もう一度行ったのであれば「行った」と返事をしてくれたまえ。"
+            }));
+            return;
+        }
+    }
+    c = new Counter();
+    c.name = name;
+    c.month = month;
+    c.date = date.getDate();
+    await c.save();
+    const counters = await Counter.find({ month: month });
+    let result = {};
+    counters.forEach(co=>{
+        if(co.name in result){
+            result[co.name]++;
+        } else {
+            result[co.name]=1;
+        }
+    })
+    let text = name + "君、ご苦労だった。今月の皆のジム状況は以下の通りだ。\n";
+    //TODO: aggregate
+    result.keys.forEach(k => {
+        text += "\n" + k + "\t" + result[k] + "回";
+    });
+    return text;
+}
+
+async function removeCount(event){
+    const profile = await client.getProfile(event.source.userId);
+    const name = profile.displayName;
+    const Counter = mongoose.model("Counter");
+    const date = new Date();
+    const month = "" + date.getFullYear() + date.getMonth();
+    let c = await Counter.findOne({ name: name, month: month, day: date.getDate() });
+    if(c){
+        await Counter.deleteOne({name:name, month:month, day:date.getDate() });
+        return name + "君。今日は行っていないのだな？記録を消去したぞ";
+    }
+}
 
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
 app.post('/callback', line.middleware(config), (req, res) => {
-        res.sendStatus(200);
+    res.sendStatus(200);
 
-        let events_processed = [];
-        req.body.events.forEach(async (event) => {
-            if (event.type == "message" && event.message.type == "text"){
-                if (event.message.text == "こんにちは"){
-                    const profile = await client.getProfile(event.source.userId);
+    let events_processed = [];
+    req.body.events.forEach(async (event) => {
+        if (event.type == "message" && event.message.type == "text") {
+            const message_text = event.message.text
+            if (message_text == "こんにちは") {
+                const profile = await client.getProfile(event.source.userId);
+                events_processed.push(client.replyMessage(event.replyToken, {
+                    type: "text",
+                    text: profile.displayName + "さん、こんにちは"
+                }));
+            }
+            if (message_text == "行った" || message_text == "いった") {
+                let text = await manageCount(event,true);
+                if (text) {
                     events_processed.push(client.replyMessage(event.replyToken, {
                         type: "text",
-                        text: profile.displayName + "さん、こんにちは"
+                        text: text
                     }));
                 }
             }
-            if (event.type == "message" && event.message.type == "image"){
-                const profile = await client.getProfile(event.source.userId);
-                const name = profile.displayName;
-                const Counter = mongoose.model("Counter");
-                const date = new Date();
-                const month = ""+date.getFullYear()+date.getMonth();
-                let c = await Counter.findOne({name: name, month: month});
-                if(c){
-                    console.log("counter found");
-                    console.log(c);
-                } else {
-                    console.log("counter not found");
-                    c = new Counter();
-                    c.name = name;
-                    c.month = month;
-                    c.count = 0;
+            if (message_text == "行ってない" || message_text == "いってない") {
+                let text = await removeCount(event,true);
+                if (text) {
+                    events_processed.push(client.replyMessage(event.replyToken, {
+                        type: "text",
+                        text: text
+                    }));
                 }
-                c.count++;
-                await c.save();
-                const counts = await Counter.find({month: month});
-                let text = name + "君、ご苦労だった。今月の皆の状況は以下の通りだ。¥¥n";
-                counts.forEach(co=>{
-                    text += "\n" + co.name + "\t" + co.count + "回";
-                });
-
+            }
+        }
+        if (event.type == "message" && event.message.type == "image") {
+            let text = await manageCount(event);
+            if(text){
                 events_processed.push(client.replyMessage(event.replyToken, {
                     type: "text",
                     text: text
                 }));
             }
-        });
-        Promise.all(events_processed).then(
-            (response) => {
-                console.log(`${response.length} event(s) processed.`);
-            }
-        );
+        }
+    });
+    Promise.all(events_processed).then(
+        (response) => {
+            console.log(`${response.length} event(s) processed.`);
+        }
+    );
 });
 
 // event handler
