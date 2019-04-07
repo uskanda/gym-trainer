@@ -56,7 +56,7 @@ async function manageCount(event,force=false){
     })
     let text = name + "君、ご苦労だった。今月の皆のジム状況は以下の通りだ。\n";
     //TODO: aggregate
-    result.keys.forEach(k => {
+    Object.keys(result).forEach(k => {
         text += "\n" + k + "\t" + result[k] + "回";
     });
     return text;
