@@ -33,11 +33,7 @@ async function manageCount(event,force=false){
         if (c) {
             console.log("counter found");
             console.log(c);
-            events_processed.push(client.replyMessage(event.replyToken, {
-                type: "text",
-                text: name + "君、今日は既にジムに行ったはずだが？もう一度行ったのであれば「行った」と返事をしてくれたまえ。"
-            }));
-            return;
+            return name + "君、今日は既にジムに行ったはずだが？もう一度行ったのであれば「行った」と返事をしてくれたまえ。"
         }
     }
     let c = new Counter();
@@ -89,7 +85,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 const profile = await client.getProfile(event.source.userId);
                 events_processed.push(client.replyMessage(event.replyToken, {
                     type: "text",
-                    text: "やあ、" +profile.displayName + "君。今日も私と一緒にトレーニングだ"
+                    text: "やあ、" +profile.displayName + "君。今日も私と一緒にトレーニングだ。\nジムに行ったら、画像をここにアップロードしたまえ。"
                 }));
             }
             if (message_text == "行った" || message_text == "いった") {
