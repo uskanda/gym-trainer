@@ -18,7 +18,7 @@ const client = new line.Client(config);
 const app = express();
 
 let Schema = mongoose.Schema;
-const CounterSchema = new Schema({name: String, count: Number, month: String});
+const CounterSchema = new Schema({name: String, count: Number, month: String, last: Date});
 mongoose.model("Counter", CounterSchema);
 mongoose.connect(process.env.MONGODB_URI);
 
@@ -61,7 +61,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 let text = name + "君、ご苦労だった。今月の皆の状況は以下の通りだ。";
                 counts.forEach(co=>{
                     text += current + "¥n" + co.name + "¥t" + co.count + "回";
-                },
+                });
 
                 events_processed.push(client.replyMessage(event.replyToken, {
                     type: "text",
