@@ -40,7 +40,7 @@ async function manageCount(event,force=false){
             return;
         }
     }
-    c = new Counter();
+    let c = new Counter();
     c.name = name;
     c.month = month;
     c.date = date.getDate();
