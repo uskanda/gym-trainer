@@ -58,9 +58,10 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 c.count++;
                 await c.save();
                 const counts = await Counter.find({month: month});
-                let text = counts.reduce((co,current)=>{
-                    return current + "¥n" + co.name + "¥t" + co.count + "回"
-                },name + "君、ご苦労だった。今月の皆の状況は以下の通りだ。");
+                let text = name + "君、ご苦労だった。今月の皆の状況は以下の通りだ。";
+                counts.forEach(co=>{
+                    text += current + "¥n" + co.name + "¥t" + co.count + "回";
+                },
 
                 events_processed.push(client.replyMessage(event.replyToken, {
                     type: "text",
