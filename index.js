@@ -43,7 +43,7 @@ async function manageCount(event,force=false){
     let c = new Counter();
     c.name = name;
     c.month = month;
-    c.date = date.getDate();
+    c.day = date.getDate();
     await c.save();
     const counters = await Counter.find({ month: month });
     let result = {};
@@ -73,6 +73,7 @@ async function removeCount(event){
         await Counter.deleteOne({name:name, month:month, day:date.getDate() });
         return name + "君。今日は行っていないのだな？記録を消去したぞ";
     }
+    return "む？もともと記録がないようだぞ";
 }
 
 // register a webhook handler with middleware
@@ -88,7 +89,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 const profile = await client.getProfile(event.source.userId);
                 events_processed.push(client.replyMessage(event.replyToken, {
                     type: "text",
-                    text: profile.displayName + "さん、こんにちは"
+                    text: "やあ、" +profile.displayName + "君。今日も私と一緒にトレーニングだ"
                 }));
             }
             if (message_text == "行った" || message_text == "いった") {
@@ -101,7 +102,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 }
             }
             if (message_text == "行ってない" || message_text == "いってない") {
-                let text = await removeCount(event,true);
+                let text = await removeCount(event);
                 if (text) {
                     events_processed.push(client.replyMessage(event.replyToken, {
                         type: "text",
