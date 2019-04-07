@@ -19,15 +19,24 @@ const app = express();
 // register a webhook handler with middleware
 // about the middleware, please refer to doc
 app.post('/callback', line.middleware(config), (req, res) => {
-    Promise
-        .all(req.body.events.map(handleEvent))
-        .then((result) => res.json(result))
-        .catch((err) => {
-            console.log(config.channelAccessToken);
-            console.log(config.channelSecret);
-            console.error(err);
-            res.status(500).end();
+        res.sendStatus(200);
+
+        let events_processed = [];
+        req.body.events.forEach((event) => {
+            if (event.type == "message" && event.message.type == "text"){
+                if (event.message.text == "こんにちは"){
+                    events_processed.push(bot.replyMessage(event.replyToken, {
+                        type: "text",
+                        text: "これはこれは"
+                    }));
+                }
+            }
         });
+        Promise.all(events_processed).then(
+            (response) => {
+                console.log(`${response.length} event(s) processed.`);
+            }
+        );
 });
 
 // event handler
