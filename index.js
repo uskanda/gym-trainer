@@ -47,7 +47,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 let c = await Counter.findOne({name: name, month: month});
                 if(c){
                     console.log("counter found");
-                    console.log(doc);
+                    console.log(c);
                 } else {
                     console.log("counter not found");
                     c = new Counter();
