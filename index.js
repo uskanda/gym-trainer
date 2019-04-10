@@ -136,6 +136,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 "今日のおすすめマシンはリカンベントバイクだ",
                 "今日のおすすめマシンはアップライトバイクだ",
                 "今日のおすすめマシンはパワーラックだ"];
+                const profile = await client.getProfile(event.source.userId);
                 let text= profile.displayName + "君。今日はジムに行くのだな？\n" + candidates[Math.floor(Math.random()*candidates.length)];
                 if (text) {
                     events_processed.push(client.replyMessage(event.replyToken, {
