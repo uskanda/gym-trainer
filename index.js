@@ -155,6 +155,12 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 }));
             }
         }
+        if (event.type == "sticker" && event.message.packageId == "3500524") {
+            events_processed.push(client.replyMessage(event.replyToken, {
+                type: "text",
+                text: "クソスタンプを送るのはやめたまえ"
+            }));
+        }
     });
     Promise.all(events_processed).then(
         (response) => {
