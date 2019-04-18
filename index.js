@@ -41,7 +41,7 @@ async function manageCount(event,force=false){
     c.month = month;
     c.day = date.getDate();
     await c.save();
-    text = showStats(month);
+    let text = showStats(month);
     return text;
 }
 
@@ -97,7 +97,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
             if (message_text == "stats" || message_text == "統計") {
                 const date = new Date();
                 const month = "" + date.getFullYear() + date.getMonth();
-                let text = await showStats(event);
+                let text = await showStats(month);
                 if (text) {
                     events_processed.push(client.replyMessage(event.replyToken, {
                         type: "text",
