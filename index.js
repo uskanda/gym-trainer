@@ -41,11 +41,13 @@ async function manageCount(event,force=false){
     c.month = month;
     c.day = date.getDate();
     await c.save();
-    let text = showStats(month);
+    let text = showStats(event,month);
     return text;
 }
 
-async function showStats(month){
+async function showStats(event, month){
+    const profile = await client.getProfile(event.source.userId);
+    const name = profile.displayName;
     const Counter = mongoose.model("Counter");
     const counters = await Counter.find({ month: month });
     let result = {};
@@ -97,7 +99,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
             if (message_text == "stats" || message_text == "統計") {
                 const date = new Date();
                 const month = "" + date.getFullYear() + date.getMonth();
-                let text = await showStats(month);
+                let text = await showStats(event,month);
                 if (text) {
                     events_processed.push(client.replyMessage(event.replyToken, {
                         type: "text",
