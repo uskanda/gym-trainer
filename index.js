@@ -46,6 +46,7 @@ async function manageCount(event,force=false){
 }
 
 async function showStats(month){
+    const Counter = mongoose.model("Counter");
     const counters = await Counter.find({ month: month });
     let result = {};
     counters.forEach(co=>{
