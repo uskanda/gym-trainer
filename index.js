@@ -41,6 +41,11 @@ async function manageCount(event,force=false){
     c.month = month;
     c.day = date.getDate();
     await c.save();
+    text = showStats(month);
+    return text;
+}
+
+async function showStats(month){
     const counters = await Counter.find({ month: month });
     let result = {};
     counters.forEach(co=>{
@@ -88,6 +93,17 @@ app.post('/callback', line.middleware(config), (req, res) => {
                     text: "やあ、" +profile.displayName + "君。今日も私と一緒にトレーニングだ。\nジムに行ったら、画像をここにアップロードしたまえ。"
                 }));
             }
+            if (message_text == "stats" || message_text == "統計") {
+                const date = new Date();
+                const month = "" + date.getFullYear() + date.getMonth();
+                let text = await showStats(event);
+                if (text) {
+                    events_processed.push(client.replyMessage(event.replyToken, {
+                        type: "text",
+                        text: text
+                    }));
+                }
+            }
             if (message_text == "行った" || message_text == "いった") {
                 let text = await manageCount(event,true);
                 if (text) {
@@ -106,10 +122,12 @@ app.post('/callback', line.middleware(config), (req, res) => {
                     }));
                 }
             }
-            if (message_text == "行く" || 
+            if (message_text == "行く" ||
                 message_text == "いく" ||
                 message_text == "やる" ||
-                message_text == "プラン" 
+                message_text.endsWith("行く") ||
+                message_text.endsWith("いく") ||
+                message_text == "プラン"
                 ) {
                 let candidates = ["報告を期待しているぞ", 
                 "よい心がけだ",
