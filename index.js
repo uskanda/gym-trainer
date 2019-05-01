@@ -87,6 +87,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
 
     let events_processed = [];
     req.body.events.forEach(async (event) => {
+        console.log(event)
         if (event.type == "message" && event.message.type == "text") {
             const message_text = event.message.text
             if (message_text == "こんにちは") {
