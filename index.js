@@ -177,7 +177,8 @@ app.post('/callback', line.middleware(config), (req, res) => {
                 }));
             }
         }
-        if (event.type == "message" && event.message.type == "sticker" && event.message.packageId == "3500524") {
+        let kusostickers = ["3500524", "4299573", "1632178", "1871786", "1026024", "3784931", "1311958", "3933855", "6203250"]
+        if (event.type == "message" && event.message.type == "sticker" && kusostickers.includes(event.message.packageId)) {
             events_processed.push(client.replyMessage(event.replyToken, {
                 type: "text",
                 text: "クソスタンプを送るのはやめたまえ"
