@@ -3,6 +3,7 @@
 const line = require('@line/bot-sdk');
 const express = require('express');
 const mongoose = require('mongoose');
+const rp = require('request-promise');
 
 // create LINE SDK config from env variables
 const config = {
@@ -78,6 +79,19 @@ async function removeCount(event){
         return name + "君。今日は行っていないのだな？記録を消去したぞ";
     }
     return "む？もともと記録がないようだぞ";
+}
+
+async function askScott(event) {
+    try {
+        return await rp.get({
+            url: process.env.SCOTT_ENDPOINT,
+            qs: { user: event.source.userId },
+            headers: { "X-SCOTT-KEY": process.env.SCOTT_KEY },
+            json: true
+        });
+    } catch (error) {
+        return false;
+    }
 }
 
 // register a webhook handler with middleware
@@ -164,6 +178,25 @@ app.post('/callback', line.middleware(config), (req, res) => {
                     events_processed.push(client.replyMessage(event.replyToken, {
                         type: "text",
                         text: text
+                    }));
+                }
+            }
+            if (message_text == "コナミ") {
+                const scott = await askScott(event);
+                if (scott) {
+                    const text = await manageCount(event);
+                    events_processed.push(client.replyMessage(event.replyToken, [{
+                        type: "image",
+                        originalContentUrl: scott.originalContentUrl,
+                        previewImageUrl: scott.previewImageUrl
+                    }, {
+                        type: "text",
+                        text: text
+                    }]));
+                } else {
+                    events_processed.push(client.replyMessage(event.replyToken, {
+                        type: "text",
+                        text: "む、今日はまだ行ってないようだぞ。"
                     }));
                 }
             }
