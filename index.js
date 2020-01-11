@@ -100,7 +100,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
     res.sendStatus(200);
 
     let events_processed = [];
-    req.body.events.forEach(async (event) => {
+    req.body.events.some(async (event) => {
         console.log(event)
         if (event.type == "message" && event.message.type == "text") {
             const message_text = event.message.text
@@ -209,6 +209,7 @@ app.post('/callback', line.middleware(config), (req, res) => {
                     text: text
                 }));
             }
+            return true;
         }
         let kusostickers = ["3500524", "4299573", "1632178", "1871786", "1026024", "3784931", "1311958", "3933855", "6203250", "1017519"]
         if (event.type == "message" && event.message.type == "sticker" && kusostickers.includes(event.message.packageId)) {
